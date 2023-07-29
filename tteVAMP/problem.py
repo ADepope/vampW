@@ -2,6 +2,7 @@ class problem:
     n = None
     m = None
     model = None
+    learn_params = None
 
     def __init__(self, n, m, la, sigma, model):
         self.prior(la, sigma)

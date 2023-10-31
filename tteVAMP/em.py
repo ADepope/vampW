@@ -22,3 +22,30 @@ def update_Weibull_alpha(y, mu_old, z_hat, alpha, xi):
     n,_ = y.shape
     out = - np.log(n) / alpha - np.sum(np.log(y) - z_hat + alpha/2/xi) - emc/alpha
     return out
+
+def update_Prior(old_prior, r1, gam1):
+    prior = old_prior
+    r1 = np.asmatrix(r1)
+    omegas = np.asmatrix(omegas)
+    sigmas = np.asmatrix(sigmas)
+    sigmas_max = old_prior.sigmas.max()
+    gam1inv = 1.0/gam1
+    # np.exp( - np.power(np.transpose(r1),2) / 2 @ (sigmas_max - sigmas) / (sigmas_max + gam1inv) / (sigmas + gam1inv)) has shape = (P,L) and  omegas / np.sqrt(gam1inv + sigmas) has shape = (1, L)
+    beta_tilde=np.multiply( np.exp( - np.power(np.transpose(r1),2) / 2 @ (sigmas_max - sigmas) / (sigmas_max + gam1inv) / (sigmas + gam1inv)), omegas / np.sqrt(gam1inv + sigmas) )
+    sum_beta_tilde = beta_tilde.sum(axis=1)
+    beta_tilde=beta_tilde / sum_beta_tilde
+    # pi.shape = (P, 1)
+    pi = 1.0 / ( 1.0 + (1-prior.la * np.exp(-np.power(np.transpose(r1),2) / 2 * sigmas_max * gam1 / (sigmas_max + gam1inv) ) / np.sqrt(gam1inv) ) / sum_beta_tilde )
+    gamma = np.divide(np.transpose(r1) * gam1, gam1 + 1.0/sigmas )
+    # v.shape = (1,L)
+    v = 1.0 / (gam1 + 1.0/sigmas)
+
+    #updating sparsity level
+    prior.la = np.mean(pi)
+    #updating variances in the mixture
+    prior.sigmas = (np.transpose(pi) @ np.multiply( beta_tilde , (np.power(gamma,2) + v)) ) / (np.transpose(pi) @ beta_tilde)
+    #updating prior probabilities in the mixture
+    prior.omegas = (np.transpose(pi) @ beta_tilde ) / np.sum(pi)
+    
+    return prior
+    

@@ -17,7 +17,7 @@ def sim_geno(n,m,p): # checked!
     return X
 
 def sim_beta(m, la, sigma): # checked!
-    beta = random.normal(loc=0.0, scale=np.sqrt(sigma), size=[m,1]) # scale = standard deviation
+    beta = random.normal(loc=0.0, scale=np.sqrt(sigma[0]), size=[m,1]) # scale = standard deviation
     beta *= random.binomial(1, la, size=[m,1])
     return beta
 
@@ -63,7 +63,7 @@ def sim_pheno_LogNormal(X, beta, mu, h2):
     
 def sim_model(problem,h2,p, kappa=None):
     X = sim_geno(problem.n, problem.m, p)
-    beta = sim_beta(problem.m, problem.prior.la, problem.prior.sigma)
+    beta = sim_beta(problem.m, problem.prior.la, problem.prior.sigmas)
     mu = np.zeros((problem.n,1))
     print(problem.model)
     if problem.model == 'Weibull':

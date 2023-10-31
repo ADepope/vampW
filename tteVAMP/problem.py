@@ -4,17 +4,19 @@ class problem:
     model = None
     learn_params = None
 
-    def __init__(self, n, m, la, sigma, model):
-        self.prior(la, sigma)
+    def __init__(self, n, m, la, sigmas, omegas, model):
+        self.prior(la, sigmas, omegas)
         self.model = model
         self.n = n
         self.m = m
     
     class prior:
         la = 0.5
-        sigma = 1
-        def __init__(self, la, sigma):
+        sigmas = [1]
+        omegas = [1]
+        def __init__(self, la, sigmas, omegas):
             self.la = la
-            self.sigma = sigma
+            self.sigmas = sigmas
+            self.omegas = omegas
 
 

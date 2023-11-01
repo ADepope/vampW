@@ -48,4 +48,4 @@ def update_Prior(old_prior, r1, gam1):
     prior.omegas = (np.transpose(pi) @ beta_tilde ) / np.sum(pi)
     
     return prior
-    
+

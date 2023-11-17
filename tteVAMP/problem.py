@@ -3,12 +3,14 @@ class problem:
     m = None
     model = None
     learn_params = None
+    censored = None
 
     def __init__(self, n, m, la, sigmas, omegas, model):
         self.prior(la, sigmas, omegas)
         self.model = model
         self.n = n
         self.m = m
+        self.censored=np.zeros(n)
     
     class prior:
         la = 0.5

@@ -1,10 +1,11 @@
 import scipy
 import numpy as np
+import math
 
 # Euler -Mascheroni constant
 emc = float( sympy.S.EulerGamma.n(10) )
 
-def update_Weibull_alpha_ew(alpha, y, mu, z_hat, xi):
+def update_Weibull_alpha_eq(alpha, y, mu, z_hat, xi):
     res = np.log(y) - mu - z_hat
     sum_res = np.sum(res)
     out = np.exp(-emc) * np.sum( np.exp(alpha * res + alpha**2/2/xi) * (res + alpha/xi) )
@@ -22,6 +23,17 @@ def update_Weibull_alpha(y, mu_old, z_hat, alpha, xi):
     n,_ = y.shape
     out = - np.log(n) / alpha - np.sum(np.log(y) - z_hat + alpha/2/xi) - emc/alpha
     return out
+
+def update_LogNormal_mu_eq(y, mu, z_hat, sigma, censored):
+    n,_ = y.shape
+    out = np.zeros(n)
+    #contribution of non-censored individuals
+    out[censored==0] = (np.log(y[censored==0])-mu-z_hat[censored==0])/sigma/sigma
+    #contribution of censored individuals (for such corresponding values of z_hat = x_i^T * beta_hat and y = censoring time)
+    out[censored==1] = np.exp(-np.power(mu + z1_hat[censored==1]-np.log(y[censored==1),2) / 2 / sigma / sigma) * np.sqrt(2/math.pi) / sigma / (1+math.erf(mu + z1+hat[censored==1]-np.log(y[censored==1])))
+    out = np.sum(out)
+    return out   
+
 
 def update_Prior(old_prior, r1, gam1):
     prior = old_prior

@@ -2,9 +2,11 @@ import scipy
 import numpy as np
 import math
 
+### CONSTANTS ###
 # Euler -Mascheroni constant
 emc = float( sympy.S.EulerGamma.n(10) )
 
+### WEIBULL MODEL ###
 def update_Weibull_alpha_eq(alpha, y, mu, z_hat, xi):
     res = np.log(y) - mu - z_hat
     sum_res = np.sum(res)
@@ -17,13 +19,16 @@ def update_Weibull_alpha(y, mu, z_hat, alpha_old, xi):
     out = scipy.optimize.fsolve(update_Weibull_alpha_eq, x0 = alpha_old, args=(y, mu, z_hat, xi))
     return out
 
-def update_Weibull_alpha(y, mu_old, z_hat, alpha, xi):
+def update_Weibull_mu(y, mu_old, z_hat, alpha, xi):
     # y.shape = [n,1]
     # z_hat.shape = [n,1]
     n,_ = y.shape
     out = - np.log(n) / alpha - np.sum(np.log(y) - z_hat + alpha/2/xi) - emc/alpha
     return out
 
+## LOGNORMAL MODEL ###
+#computes the EM update non-linear equation for mu in the LogNormal model
+#y, mu, z_hat should be np.arrays
 def update_LogNormal_mu_eq(y, mu, z_hat, sigma, censored):
     n,_ = y.shape
     out = np.zeros(n)
@@ -34,7 +39,30 @@ def update_LogNormal_mu_eq(y, mu, z_hat, sigma, censored):
     out = np.sum(out)
     return out   
 
+#find an EM-update for mu parameter in LogNormal model
+def update_LogNormal_mu(y, mu, z_hat, sigma, censored):
+    out = scipy.optimize.fsolve(update_LogNormal_mu_eq, x0 = mu, args=(y, mu, z_hat, sigma, censored))
+    return out
 
+#y, mu, z_hat should be np.arrays
+def update_LogNormal_sigma_eq(y, mu, z_hat, sigma, xi, censored):
+    n,_ = y.shape
+    out = np.zeros(n)
+    # since from both expression one can extract sigma in the denominator we use the formulae without this additional sigma in the denominator 
+    #contribution of non-censored individuals
+    out[censored==0] = ( np.power( (np.log(y[censored==0])-mu-z_hat[censored==0]), 2) + 1/xi )/ np.power(sigma,2) - 1 
+    #contribution of censored individuals (for such corresponding values of z_hat = x_i^T * beta_hat and y = censoring time)
+    out[censored==1] = 1/np.power(sigma,2) / xi + (1 - np.sqrt(2/math.pi) ) / sigma * (np.log(y[censored==1) - mu - z_hat[censored==1]) / (1+math.erf(mu + z1+hat[censored==1]-np.log(y[censored==1]))) \
+        * np.exp(-np.power((np.log(y[censored==1) - mu - z_hat[censored==1]),2)/2/sigma/sigma) - 1
+    out = np.sum(out)
+    return out       
+
+#find an EM-update for sigma parameter in LogNormal model
+def update_LogNormal_sigma(y, mu, z_hat, sigma, xi, censored):
+    out = scipy.optimize.fsolve(update_LogNormal_sigma_eq, x0 = sigma, args=(y, mu, z_hat, sigma, xi, censored))
+    return out
+
+# performs the update of the prior distribution
 def update_Prior(old_prior, r1, gam1):
     prior = old_prior
     r1 = np.asmatrix(r1)

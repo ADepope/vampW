@@ -29,7 +29,7 @@ def update_Weibull_mu(y, mu_old, z_hat, alpha, xi):
 ## LOGNORMAL MODEL ###
 #computes the EM update non-linear equation for mu in the LogNormal model
 #y, mu, z_hat should be np.arrays
-def update_LogNormal_mu_eq(y, mu, z_hat, sigma, censored):
+def update_LogNormal_mu_eq(mu, y, z_hat, sigma, censored):
     n,_ = y.shape
     out = np.zeros(n)
     #contribution of non-censored individuals
@@ -41,11 +41,11 @@ def update_LogNormal_mu_eq(y, mu, z_hat, sigma, censored):
 
 #find an EM-update for mu parameter in LogNormal model
 def update_LogNormal_mu(y, mu, z_hat, sigma, censored):
-    out = scipy.optimize.fsolve(update_LogNormal_mu_eq, x0 = mu, args=(y, mu, z_hat, sigma, censored))
+    out = scipy.optimize.fsolve(update_LogNormal_mu_eq, x0 = mu, args=(y, z_hat, sigma, censored))
     return out
 
 #y, mu, z_hat should be np.arrays
-def update_LogNormal_sigma_eq(y, mu, z_hat, sigma, xi, censored):
+def update_LogNormal_sigma_eq(sigma, y, mu, z_hat, xi, censored):
     n,_ = y.shape
     out = np.zeros(n)
     # since from both expression one can extract sigma in the denominator we use the formulae without this additional sigma in the denominator 
@@ -59,7 +59,25 @@ def update_LogNormal_sigma_eq(y, mu, z_hat, sigma, xi, censored):
 
 #find an EM-update for sigma parameter in LogNormal model
 def update_LogNormal_sigma(y, mu, z_hat, sigma, xi, censored):
-    out = scipy.optimize.fsolve(update_LogNormal_sigma_eq, x0 = sigma, args=(y, mu, z_hat, sigma, xi, censored))
+    out = scipy.optimize.fsolve(update_LogNormal_sigma_eq, x0 = sigma, args=(y, mu, z_hat, xi, censored))
+    return out
+
+## EXPGAMMA MODEL ### (no censoring is taken into account)
+def update_ExpGamma_mu(y, mu, z_hat, kappa, theta, xi):
+    n,_ = y.shape
+    out = - theta * np.log(n*kappa) + theta * scipy.special.polygamma(0, kappa) + 0.5 / theta / xi + np.logaddexp.reduce((np.log(y) - z_hat)/theta, dtype=np.float64)
+    return out
+
+def update_ExpGamma_theta_eq(theta, y, mu, z_hat, kappa, xi):
+    out = kappa * np.sum(np.log(y) - mu - z_hat) - np.exp(scipy.special.polygamma(0, kappa) + 0.5 / theta / theta / xi)  * np.sum( (np.log(y) - mu - z_hat + 1.0/theta / xi) * np.exp((np.log(y) - mu - z_hat)/theta) )    
+    return out
+
+def update_ExpGamma_theta(y, mu, z_hat, kappa, theta, xi): 
+    out = scipy.optimize.fsolve(update_ExpGamma_theta_eq, x0 = theta, args=(y, mu, z_hat, kappa, xi))
+    return out
+
+def update_ExpGamma_kappa_eq(kappa, y, mu, z_hat, theta, xi):
+    out = 1    
     return out
 
 # performs the update of the prior distribution

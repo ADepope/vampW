@@ -21,4 +21,27 @@ class problem:
             self.sigmas = sigmas
             self.omegas = omegas
 
+    class hyperparams:
+        alpha = None
+        mu = None
+        sigma = None
+        theta = None
+        kappa = None
+        def __init__(self, model, *args):
+            if problem.model == 'Weibull':
+                # mu = args[0], alpha = args[1]
+                self.mu = args[0]
+                self.alpha = args[1]
+            elif problem.model == 'Gamma':
+                # mu = args[0], kappa = args[1], theta = args[2]
+                self.mu = args[0]
+                self.kappa = args[1]
+                self.theta = args[2]
+            elif problem.model == 'LogNormal':
+                # mu = args[0], sigma = args[1]
+                self.mu = args[0]
+                self.sigma = args[1]
+            else:
+                raise Exception(problem.model, " is not a valid model. Allowed models are: 'Weibull', 'Gamma' and 'LogNormal'.")
+            
 

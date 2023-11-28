@@ -8,10 +8,11 @@ emc = float( sympy.S.EulerGamma.n(10) )
 
 ### WEIBULL MODEL ###
 def update_Weibull_alpha_eq(alpha, y, mu, z_hat, xi):
-    res = np.log(y) - mu - z_hat
-    sum_res = np.sum(res)
-    out = np.exp(-emc) * np.sum( np.exp(alpha * res + alpha**2/2/xi) * (res + alpha/xi) )
-    return out - sum_res
+    n,_ = y.shape
+    out = np.zeros(n)
+    res = np.log(y[censored==0]) - mu - z_hat[censored==0]
+    out[censored==0] = np.sum(res) - np.exp(-emc) * np.sum( np.exp(alpha * res + alpha**2/2/xi) * (res + alpha/xi) )
+    return out
 
 def update_Weibull_alpha(y, mu, z_hat, alpha_old, xi):
     # y.shape = [n,1]
@@ -63,21 +64,27 @@ def update_LogNormal_sigma(y, mu, z_hat, sigma, xi, censored):
     return out
 
 ## EXPGAMMA MODEL ### (no censoring is taken into account)
-def update_ExpGamma_mu(y, mu, z_hat, kappa, theta, xi):
+def update_ExpGamma_mu(y, z_hat, mu, kappa, theta, xi):
     n,_ = y.shape
     out = - theta * np.log(n*kappa) + theta * scipy.special.polygamma(0, kappa) + 0.5 / theta / xi + np.logaddexp.reduce((np.log(y) - z_hat)/theta, dtype=np.float64)
     return out
 
 def update_ExpGamma_theta_eq(theta, y, mu, z_hat, kappa, xi):
-    out = kappa * np.sum(np.log(y) - mu - z_hat) - np.exp(scipy.special.polygamma(0, kappa) + 0.5 / theta / theta / xi)  * np.sum( (np.log(y) - mu - z_hat + 1.0/theta / xi) * np.exp((np.log(y) - mu - z_hat)/theta) )    
+    out = kappa * np.sum(np.log(y) - mu - z_hat) - np.exp(scipy.special.polygamma(0, kappa) + 0.5 / theta / theta / xi)  * np.sum( np.multiply( (np.log(y) - mu - z_hat + 1.0/theta / xi), np.exp((np.log(y) - mu - z_hat)/theta) ) )    
     return out
 
-def update_ExpGamma_theta(y, mu, z_hat, kappa, theta, xi): 
+def update_ExpGamma_theta(y, z_hat, mu, kappa, theta, xi): 
     out = scipy.optimize.fsolve(update_ExpGamma_theta_eq, x0 = theta, args=(y, mu, z_hat, kappa, xi))
     return out
 
 def update_ExpGamma_kappa_eq(kappa, y, mu, z_hat, theta, xi):
-    out = 1    
+    n,_ = y.shape
+    out = np.sum(np.log(y) - mu - z1_hat)/theta - n * scipy.special.polygamma(0, kappa) + scipy.special.polygamma(1, kappa) * (n * kappa - np.sum( (np.log(y) - mu - z_hat)/theta +  \
+        scipy.special.polygamma(0, kappa) + 0.5/theta/xi) )   
+    return out
+
+def update_ExpGamma_kappa(y, z_hat, mu, kappa, theta, xi): 
+    out = scipy.optimize.fsolve(update_ExpGamma_kappa_eq, x0 = kappa, args=(y, mu, z_hat, theta, xi))
     return out
 
 # performs the update of the prior distribution

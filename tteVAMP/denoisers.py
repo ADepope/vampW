@@ -28,6 +28,22 @@ def der_den_beta(r,gam1,prior):
 
 
 # denoiser of z
+def den_z(p1, tau1, y, problem):
+     if problem.model == 'Weibull':
+         return den_z_Weibull(p1, tau1, y, problem.alpha, problem.mu)
+     elif problem.model == 'Gamma':
+         return den_z_Gamma(p1, tau1, y, problem.kappa, problem.theta, problem.mu)
+     elif problem.model == 'LogNormal':
+         return den_z_LogNormal(p1, tau1, y, problem.sigma, problem.mu)      
+
+def der_den_z(p1, tau1, y, problem):
+     if problem.model == 'Weibull':
+         return der_den_z_Weibull(p1, tau1, y, problem.alpha, problem.mu)
+     elif problem.model == 'Gamma':
+         return der_den_z_Gamma(p1, tau1, y, problem.kappa, problem.theta, problem.mu)
+     elif problem.model == 'LogNormal':
+         return der_den_z_LogNormal(p1, tau1, y, problem.sigma, problem.mu) 
+         
 # Weibull model
 def den_z_non_lin_eq_Weibull(z, tau1, p1, y, alpha, mu): 
     res = tau1 * (z-p1) + alpha - alpha * np.power(y, alpha) * np.exp(- alpha * (mu + z) - emc)

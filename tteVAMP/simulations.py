@@ -73,5 +73,5 @@ def sim_model(problem,h2,p, kappa=None):
     elif problem.model == 'LogNormal':
         return X, beta, sim_pheno_LogNormal(X, beta, mu, h2)
     else:
-        raise Exception(problem.model, " is not a valid model")
+        raise Exception(problem.model, " is not a valid model. Allowed models are: 'Weibull', 'Gamma' and 'LogNormal'")
     

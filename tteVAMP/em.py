@@ -1,6 +1,7 @@
 import scipy
 import numpy as np
 import math
+import sympy 
 
 ### CONSTANTS ###
 # Euler -Mascheroni constant
@@ -11,7 +12,7 @@ def update_Weibull_alpha_eq(alpha, y, mu, z_hat, xi):
     n,_ = y.shape
     out = np.zeros(n)
     res = np.log(y[censored==0]) - mu - z_hat[censored==0]
-    out[censored==0] = np.sum(res) - np.exp(-emc) * np.sum( np.exp(alpha * res + alpha**2/2/xi) * (res + alpha/xi) )
+    out[censored==0] = np.sum(res) - np.exp(-emc) * np.sum( np.exp(alpha * res + (alpha**2)/2/xi) * (res + alpha/xi) )
     return out
 
 def update_Weibull_alpha(y, mu, z_hat, alpha_old, xi):
@@ -36,7 +37,7 @@ def update_LogNormal_mu_eq(mu, y, z_hat, sigma, censored):
     #contribution of non-censored individuals
     out[censored==0] = (np.log(y[censored==0])-mu-z_hat[censored==0])/sigma/sigma
     #contribution of censored individuals (for such corresponding values of z_hat = x_i^T * beta_hat and y = censoring time)
-    out[censored==1] = np.exp(-np.power(mu + z1_hat[censored==1]-np.log(y[censored==1),2) / 2 / sigma / sigma) * np.sqrt(2/math.pi) / sigma / (1+math.erf(mu + z1+hat[censored==1]-np.log(y[censored==1])))
+    out[censored==1] = np.exp(-np.power(mu + z1_hat[censored==1]-np.log(y[censored==1]),2) / 2 / sigma / sigma) * np.sqrt(2/math.pi) / sigma / (1+math.erf(mu + z1+hat[censored==1]-np.log(y[censored==1])))
     out = np.sum(out)
     return out   
 
@@ -53,8 +54,8 @@ def update_LogNormal_sigma_eq(sigma, y, mu, z_hat, xi, censored):
     #contribution of non-censored individuals
     out[censored==0] = ( np.power( (np.log(y[censored==0])-mu-z_hat[censored==0]), 2) + 1/xi )/ np.power(sigma,2) - 1 
     #contribution of censored individuals (for such corresponding values of z_hat = x_i^T * beta_hat and y = censoring time)
-    out[censored==1] = 1/np.power(sigma,2) / xi + (1 - np.sqrt(2/math.pi) ) / sigma * (np.log(y[censored==1) - mu - z_hat[censored==1]) / (1+math.erf(mu + z1+hat[censored==1]-np.log(y[censored==1]))) \
-        * np.exp(-np.power((np.log(y[censored==1) - mu - z_hat[censored==1]),2)/2/sigma/sigma) - 1
+    out[censored==1] = 1/np.power(sigma,2) / xi + (1 - np.sqrt(2/math.pi) ) / sigma * (np.log(y[censored==1]) - mu - z_hat[censored==1]) / (1+math.erf(mu + z1+hat[censored==1]-np.log(y[censored==1]))) \
+        * np.exp(-np.power((np.log(y[censored==1]) - mu - z_hat[censored==1]),2)/2/sigma/sigma) - 1
     out = np.sum(out)
     return out       
 
@@ -91,8 +92,8 @@ def update_ExpGamma_kappa(y, z_hat, mu, kappa, theta, xi):
 def update_Prior(old_prior, r1, gam1):
     prior = old_prior
     r1 = np.asmatrix(r1)
-    omegas = np.asmatrix(omegas)
-    sigmas = np.asmatrix(sigmas)
+    omegas = np.asmatrix(old_prior.omegas)
+    sigmas = np.asmatrix(old_prior.sigmas)
     sigmas_max = old_prior.sigmas.max()
     gam1inv = 1.0/gam1
     # np.exp( - np.power(np.transpose(r1),2) / 2 @ (sigmas_max - sigmas) / (sigmas_max + gam1inv) / (sigmas + gam1inv)) has shape = (P,L) and  omegas / np.sqrt(gam1inv + sigmas) has shape = (1, L)

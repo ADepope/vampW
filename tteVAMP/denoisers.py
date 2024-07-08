@@ -45,7 +45,13 @@ def der_den_z(p1, tau1, y, problem):
          return der_den_z_LogNormal(p1, tau1, y, problem.sigma, problem.mu) 
          
 # Weibull model
-def den_z_non_lin_eq_Weibull(z, tau1, p1, y, alpha, mu): 
+def den_z_non_lin_eq_Weibull(z, tau1, p1, y, alpha, mu):
+    """
+    Performs MAP estimation of z
+    Defines the objective to maximize
+    Maximizing the expression below is equivalent to maximizing the likelihood of z
+    We can treat the components of z as independent under the simplifying assumptions
+    """ 
     res = tau1 * (z-p1) + alpha - alpha * np.power(y, alpha) * np.exp(- alpha * (mu + z) - emc)
     return res
     

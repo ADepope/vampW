@@ -7,23 +7,28 @@ import scipy
 emc = float( sympy.S.EulerGamma.n(10) )
 
 # denoiser of the signal beta
-def den_beta(r,gam1,prior): 
+def den_beta(r,gam1,prior): # checked!
+    """
+    This function returns the conditional expectation of the coefficients beta given the noisy estimate r
+    The expectation is of the posterior distribution with the form of Spike and Slab mixture of Gaussians
+    """
     A = (1-prior.la) * norm.pdf(r, loc=0, scale=np.sqrt(1.0/gam1)) # scale = standard deviation
-    B = prior.la * norm.pdf(r, loc=0, scale=np.sqrt(sigma + 1.0/gam1))
-    ratio = gam1 * r / (gam1 + 1/sigma) * B / (A + B)
+    B = prior.la * norm.pdf(r, loc=0, scale=np.sqrt(prior.sigmas[0] + 1.0/gam1))
+    ratio = gam1 * r / (gam1 + 1/prior.sigmas[0]) * B / (A + B)
     return ratio
 
-def der_den_beta(r,gam1,prior): 
+def der_den_beta(r,gam1,prior): # checked!
+    # Derivative of the Gaussians with respect to r
     A = (1-prior.la) * norm.pdf(r, loc=0, scale=np.sqrt(1.0/gam1))
-    B = prior.la * norm.pdf(r, loc=0, scale=np.sqrt(sigma + 1.0/gam1))
+    B = prior.la * norm.pdf(r, loc=0, scale=np.sqrt(prior.sigmas[0] + 1.0/gam1))
     print("B / (A+B) = ", B[1] / (A[1]+B[1]))
     Ader = A * (-r*gam1)
-    Bder = B * (-r) / (sigma + 1.0/gam1)
+    Bder = B * (-r) / (prior.sigmas[0] + 1.0/gam1)
     BoverAplusBder = ( Bder * A - Ader * B ) / (A+B) / (A+B)
-    print("gam1 / (gam1 + 1/sigma) = ", gam1 / (gam1 + 1/sigma))
-    print("alpha1 part I = ", gam1 / (gam1 + 1/sigma) * B[1] / (A[1] + B[1]))
-    print("alpha2 part II = ", BoverAplusBder[1] * r[1] * gam1 / (gam1 + 1.0/sigma) )
-    ratio = gam1 / (gam1 + 1/sigma) * B / (A + B) + BoverAplusBder * r * gam1 / (gam1 + 1.0/sigma)
+    print("gam1 / (gam1 + 1/sigma) = ", gam1 / (gam1 + 1/prior.sigmas[0]))
+    print("alpha1 part I = ", gam1 / (gam1 + 1/prior.sigmas[0]) * B[1] / (A[1] + B[1]))
+    print("alpha2 part II = ", BoverAplusBder[1] * r[1] * gam1 / (gam1 + 1.0/prior.sigmas[0]) )
+    ratio = gam1 / (gam1 + 1/prior.sigmas[0]) * B / (A + B) + BoverAplusBder * r * gam1 / (gam1 + 1.0/prior.sigmas[0])
     return ratio
 
 

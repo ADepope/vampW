@@ -11,22 +11,24 @@ emc = float( sympy.S.EulerGamma.n(10) )
 def update_Weibull_alpha_eq(alpha, y, mu, z_hat, xi):
     n,_ = y.shape
     out = np.zeros(n)
-    res = np.log(y[censored==0]) - mu - z_hat[censored==0]
-    out[censored==0] = np.sum(res) - np.exp(-emc) * np.sum( np.exp(alpha * res + (alpha**2)/2/xi) * (res + alpha/xi) )
+    res = np.log(y) - mu - z_hat
+    out = n / alpha + np.sum(res) - np.exp(-emc) * np.sum( np.exp(alpha * res + (alpha**2)/2/xi) * (res + alpha/xi) )
     return out
 
 def update_Weibull_alpha(y, mu, z_hat, alpha_old, xi):
     # y.shape = [n,1]
     # z_hat.shape = [n,1]
-    out = scipy.optimize.fsolve(update_Weibull_alpha_eq, x0 = alpha_old, args=(y, mu, z_hat, xi))
-    return out
+    alpha_new = scipy.optimize.fsolve(update_Weibull_alpha_eq, x0 = alpha_old, args=(y, mu, z_hat, xi))
+    if isinstance(alpha_new, np.ndarray) or isinstance(alpha_new, list): alpha_new = float(alpha_new[0])
+    return alpha_new
 
-def update_Weibull_mu(y, mu_old, z_hat, alpha, xi):
+def update_Weibull_mu(y, z_hat, alpha, xi):
     # y.shape = [n,1]
     # z_hat.shape = [n,1]
     n,_ = y.shape
-    out = - np.log(n) / alpha - np.sum(np.log(y) - z_hat + alpha/2/xi) - emc/alpha
-    return out
+    mu_new = - np.log(n) / alpha - emc/alpha + alpha / 2 / xi + 1 / alpha * np.log(np.sum(np.exp(alpha*(np.log(y) - z_hat))))
+    if isinstance(mu_new, np.ndarray) or isinstance(mu_new, list): mu_new = float(mu_new[0])
+    return mu_new
 
 ## LOGNORMAL MODEL ###
 #computes the EM update non-linear equation for mu in the LogNormal model

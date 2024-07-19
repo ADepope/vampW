@@ -1,2 +1,5 @@
+# Ignore the virtual environment directory named 'venv'
 venv
-venv-metal
+
+# Ignore the virtual environment directory named '.venv'
+.venv

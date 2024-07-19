@@ -7,6 +7,22 @@ import sympy
 # Euler -Mascheroni constant
 emc = float( sympy.S.EulerGamma.n(10) )
 
+def update_params(y, mu, z1_hat, alpha, predicted_xi, update_Weibull_alpha, update_Weibull_mu, mus, alphas, update_alpha, update_mu, it):
+    if update_alpha:
+        alpha_new = update_Weibull_alpha(y, mu, z1_hat, alpha, predicted_xi)
+        alphas.append(alpha_new)
+        alpha = alpha_new
+    if it > 5:
+        if update_mu:
+            mu_new = update_Weibull_mu(y, z1_hat, alpha, predicted_xi)
+            mus.append(mu_new)
+            mu = mu_new
+        else:
+            mus.append(mu)
+    else:
+        mus.append(mu)
+    return mu, alpha
+
 ### WEIBULL MODEL ###
 def update_Weibull_alpha_eq(alpha, y, mu, z_hat, xi):
     n,_ = y.shape

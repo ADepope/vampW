@@ -2,22 +2,25 @@ from scipy.stats import norm
 import numpy as np
 import sympy
 import scipy
+from tteVAMP.problem import *
 
 # definition of Euler-Mascheroni constant
 emc = float( sympy.S.EulerGamma.n(10) )
 
 # denoiser of the signal beta
-def den_beta(r,gam1,prior): # checked!
+def den_beta(r,gam1,problem): # checked!
     """
     This function returns the conditional expectation of the coefficients beta given the noisy estimate r
     The expectation is of the posterior distribution with the form of Spike and Slab mixture of Gaussians
     """
+    prior = problem.prior_instance
     A = (1-prior.la) * norm.pdf(r, loc=0, scale=np.sqrt(1.0/gam1)) # scale = standard deviation
     B = prior.la * norm.pdf(r, loc=0, scale=np.sqrt(prior.sigmas[0] + 1.0/gam1))
     ratio = gam1 * r / (gam1 + 1/prior.sigmas[0]) * B / (A + B)
     return ratio
 
-def der_den_beta(r,gam1,prior): # checked!
+def der_den_beta(r,gam1,problem): # checked!
+    prior = problem.prior_instance
     # Derivative of the Gaussians with respect to r
     A = (1-prior.la) * norm.pdf(r, loc=0, scale=np.sqrt(1.0/gam1))
     B = prior.la * norm.pdf(r, loc=0, scale=np.sqrt(prior.sigmas[0] + 1.0/gam1))
@@ -34,20 +37,50 @@ def der_den_beta(r,gam1,prior): # checked!
 
 # denoiser of z
 def den_z(p1, tau1, y, problem):
+    #  print(f"Inside denoiser den_z! {problem.model}")
+     d = problem.prior_instance.distribution_parameters
+    #  print(f"Mu: \n\n\n")
+    #  print(d['mu'])
      if problem.model == 'Weibull':
-         return den_z_Weibull(p1, tau1, y, problem.alpha, problem.mu)
+         
+         alpha, mu = None, None
+         if 'alpha' in d: alpha = d['alpha']
+         if 'mu' in d: mu = d['mu'][0][0]
+        #  print(f"alpha: {alpha}, mu: {mu}")
+         r = den_z_Weibull(p1, tau1, y, alpha, mu)
+        #  print(f"r: {r}")
+         return r
      elif problem.model == 'Gamma':
-         return den_z_Gamma(p1, tau1, y, problem.kappa, problem.theta, problem.mu)
+         theta, kappa, mu = None, None, None
+         if 'theta' in d: alpha = d['theta']
+         if 'kappa' in d: alpha = d['kappa']
+         if 'mu' in d: mu = d['mu'][0][0]
+         return den_z_Gamma(p1, tau1, y, kappa, theta, mu)
      elif problem.model == 'LogNormal':
-         return den_z_LogNormal(p1, tau1, y, problem.sigma, problem.mu)      
+         sigma, mu = None, None
+         if 'sigma' in d: alpha = d['sigma']
+         if 'mu' in d: mu = d['mu'][0][0]
+         return den_z_LogNormal(p1, tau1, y, sigma, mu)      
 
 def der_den_z(p1, tau1, y, problem):
+     d = problem.prior_instance.distribution_parameters
      if problem.model == 'Weibull':
-         return der_den_z_Weibull(p1, tau1, y, problem.alpha, problem.mu)
+         alpha, mu = None, None
+         if 'alpha' in d: alpha = d['alpha']
+         if 'mu' in d: mu = d['mu'][0][0]
+         r = der_den_z_Weibull(p1, tau1, y, alpha, mu)
+         return r
      elif problem.model == 'Gamma':
-         return der_den_z_Gamma(p1, tau1, y, problem.kappa, problem.theta, problem.mu)
+         theta, kappa, mu = None, None, None
+         if 'theta' in d: alpha = d['theta']
+         if 'kappa' in d: alpha = d['kappa']
+         if 'mu' in d: mu = d['mu'][0][0]
+         return der_den_z_Gamma(p1, tau1, y, kappa, theta, mu)
      elif problem.model == 'LogNormal':
-         return der_den_z_LogNormal(p1, tau1, y, problem.sigma, problem.mu) 
+         sigma, mu = None, None
+         if 'sigma' in d: alpha = d['sigma']
+         if 'mu' in d: mu = d['mu'][0][0]
+         return der_den_z_LogNormal(p1, tau1, y, sigma, mu) 
          
 # Weibull model
 def den_z_non_lin_eq_Weibull(z, tau1, p1, y, alpha, mu):
@@ -65,10 +98,12 @@ def den_z_Weibull(p1, tau1, y, alpha, mu):
     out = np.zeros((n,1))
     for i in range(0, n):
         out[i] = scipy.optimize.fsolve(den_z_non_lin_eq_Weibull, x0 = p1[i], args=(tau1, p1[i], y[i], alpha, mu) )
+    # print(f"Out: {out}")
     return out
 
 def der_den_z_Weibull(p1, tau1, y, alpha, mu):
-    z = den_z(p1, tau1, y, alpha, mu)
+    z = den_z(p1, tau1, y, Problem(model = 'Weibull', mu=np.full((y.shape[0],1), 0), alpha=alpha))
+    # print(f"Z: {z}")
     nom = tau1
     den = tau1 + alpha * alpha * np.power(y, alpha) * np.exp(- alpha * (mu + z) - emc)
     return nom / den

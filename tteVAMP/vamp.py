@@ -1,10 +1,15 @@
 import time
 import numpy as np
 from scipy.stats import norm
-from tteVAMP import problem, denoisers, em, state_evolution
+from tteVAMP.denoisers import *
+from tteVAMP.em import *
 
 # prior, y, alpha, mu, maxiter, beta_true
-def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true=None):
+def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, update_alpha):
+
+    alpha = problem.prior_instance.distribution_parameters['alpha']
+    mu = problem.prior_instance.distribution_parameters['mu'][0][0]
+
     #computing SVD decomposition of X
     [n,m] = X.shape
     u, s, vh = np.linalg.svd(X, full_matrices=False)
@@ -31,7 +36,7 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true=None):
         # Conditional expectation of x given r and the parameters of the prior distribution of x
         # This is applied elementwise to r1
         ############################################################
-        x1_hat = den_beta(r1, gam1, prior)
+        x1_hat = den_beta(r1, gam1, problem)
         ############################################################
         print("x1_hat[2] = ", x1_hat[2])
         if np.linalg.norm(x1_hat) != 0:
@@ -43,14 +48,14 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true=None):
             print("l2 error for x1_hat = ", l2_err)
             l2_errs_x.append(l2_err)
         ############################################################
-        alpha1 = np.mean( der_den_beta(r1, gam1, prior) )
+        alpha1 = np.mean( der_den_beta(r1, gam1, problem) )
         print("alpha1 = ", alpha1)
         gam2 = gam1 * (1-alpha1) / alpha1
         r2 = (x1_hat - alpha1 * r1) / (1-alpha1)
         print("true gam2 = ", 1.0 / np.var(r2 - beta_true))
         print("gam2 = ", gam2)
         # Denoising z (the genetic predictor)
-        z1_hat = den_z(p1, tau1, y, alpha, mu)
+        z1_hat = den_z(p1, tau1, y, problem)
         z1_hats.append(z1_hat)
         ############################################################
         # Cosine similarity
@@ -61,7 +66,7 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true=None):
         print("l2 error for z1_hat = ", l2_err)
         l2_errs_z.append(l2_err)
         ############################################################
-        beta_1 = np.mean(der_den_z(p1, tau1, y, alpha, mu) )
+        beta_1 = np.mean(der_den_z(p1, tau1, y, problem) )
         print("v1 = ", beta_1)
         tau2 = tau1 * (1-beta_1) / beta_1
         p2 = (z1_hat - beta_1 * p1) / (1-beta_1)
@@ -70,7 +75,7 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true=None):
 
         predicted_xi = tau1 / beta_1
         predicted_xis.append(predicted_xi)
-        actual_xi = 1 / np.var(X@beta-z1_hat)
+        actual_xi = 1 / np.var(X@beta_true-z1_hat)
         actual_xis.append(actual_xi)
 
         
@@ -94,20 +99,12 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true=None):
         
         # LMMSE estimation of z
         z2_hat = np.matmul(X, x2_hat)
-        if update_alpha:
-            alpha_new = update_Weibull_alpha(y, mu, z1_hat, alpha, predicted_xi)
-            alphas.append(alpha_new)
-            alpha = alpha_new
-        if it > 5:
-            if update_mu:
-                mu_new = update_Weibull_mu(y, z1_hat, alpha, predicted_xi)
-                mus.append(mu_new)
-                mu = mu_new
-            else:
-                mus.append(mu)
-        else:
-            mus.append(mu)
-        
+
+        mu, alpha = update_params(y, mu, z1_hat, alpha, predicted_xi, update_Weibull_alpha, update_Weibull_mu, mus, alphas, update_alpha, update_mu, it)
+        problem.prior_instance.distribution_parameters['alpha'] = alpha
+        problem.prior_instance.distribution_parameters['mu'] = np.full((y.shape[0],1), mu)
+
+    
         ############################################################
         # Cosine similarity
         print("corr(z2_hat, beta_true) = ", np.dot(z2_hat.transpose(), Xbeta_true) / np.linalg.norm(z2_hat) / np.linalg.norm(Xbeta_true))

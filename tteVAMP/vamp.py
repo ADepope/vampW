@@ -27,6 +27,7 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
     predicted_xis = []
     dl_dmus = []
     z1_hats = []
+    x1_hats = []
     
     for it in range(maxiter):
         print("**** iteration = ", it, " **** \n" )
@@ -37,13 +38,15 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         # This is applied elementwise to r1
         ############################################################
         x1_hat = den_beta(r1, gam1, problem)
+        x1_hats.append(x1_hat)
         ############################################################
         print("x1_hat[2] = ", x1_hat[2])
         if np.linalg.norm(x1_hat) != 0:
             # Cosine similarity
-            corr = np.dot(x1_hat.transpose(), beta_true) / np.linalg.norm(x1_hat) / np.linalg.norm(beta_true)
-            print("corr(x1_hat, beta_true) = ", corr[0][0])
-            corrs_x.append(corr[0][0])
+            # corr = np.dot(x1_hat.transpose(), beta_true) / np.linalg.norm(x1_hat) / np.linalg.norm(beta_true)
+            corr = np.corrcoef(np.squeeze(x1_hat, axis=-1), np.squeeze(beta_true, axis=-1))
+            print("corr(x1_hat, beta_true) = ", corr[0, 1])
+            corrs_x.append(corr[0, 1])
             l2_err = np.linalg.norm(x1_hat - beta_true) / np.linalg.norm(beta_true)
             print("l2 error for x1_hat = ", l2_err)
             l2_errs_x.append(l2_err)
@@ -59,12 +62,15 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         z1_hats.append(z1_hat)
         ############################################################
         # Cosine similarity
-        corr = np.dot(z1_hat.transpose(), Xbeta_true) / np.linalg.norm(z1_hat) / np.linalg.norm(Xbeta_true)
-        print("corr(z1_hat, X*beta_true) = ", corr[0][0])
-        corrs_z.append(corr[0][0])
+        # Note: this correlation expression could be wrong!
+        # corr = np.dot(z1_hat.transpose(), Xbeta_true) / np.linalg.norm(z1_hat) / np.linalg.norm(Xbeta_true)
+        corr = np.corrcoef(np.squeeze(z1_hat, axis=-1), np.squeeze(Xbeta_true, axis=-1))
+        print("corr(z1_hat, X*beta_true) = ", corr[0, 1])
+        corrs_z.append(corr[0, 1])
         l2_err = np.linalg.norm(z1_hat - Xbeta_true) / np.linalg.norm(Xbeta_true)
         print("l2 error for z1_hat = ", l2_err)
         l2_errs_z.append(l2_err)
+        
         ############################################################
         beta_1 = np.mean(der_den_z(p1, tau1, y, problem) )
         print("v1 = ", beta_1)
@@ -104,7 +110,7 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         problem.prior_instance.distribution_parameters['alpha'] = alpha
         problem.prior_instance.distribution_parameters['mu'] = np.full((y.shape[0],1), mu)
 
-    
+        
         ############################################################
         # Cosine similarity
         print("corr(z2_hat, beta_true) = ", np.dot(z2_hat.transpose(), Xbeta_true) / np.linalg.norm(z2_hat) / np.linalg.norm(Xbeta_true))
@@ -117,7 +123,6 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         print("true tau1 = ", 1.0 / np.var(p1 - Xbeta_true))
         print("tau1 = ", tau1)
         print("\n")
-            
 
 
     return x1_hat, gam1, corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, actual_xis, predicted_xis, dl_dmus, z1_hats

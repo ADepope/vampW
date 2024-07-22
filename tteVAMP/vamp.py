@@ -43,10 +43,14 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         print("x1_hat[2] = ", x1_hat[2])
         if np.linalg.norm(x1_hat) != 0:
             # Cosine similarity
-            # corr = np.dot(x1_hat.transpose(), beta_true) / np.linalg.norm(x1_hat) / np.linalg.norm(beta_true)
-            corr = np.corrcoef(np.squeeze(x1_hat, axis=-1), np.squeeze(beta_true, axis=-1))
-            print("corr(x1_hat, beta_true) = ", corr[0, 1])
-            corrs_x.append(corr[0, 1])
+            # Note that this is not exactly a correlation
+            # Instead this is an alignment score
+            corr = np.dot(x1_hat.transpose(), beta_true) / np.linalg.norm(x1_hat) / np.linalg.norm(beta_true)
+            print("corr(x1_hat, beta_true) = ", corr[0][0])
+            corrs_x.append(corr[0][0])
+            # corr = np.corrcoef(np.squeeze(x1_hat, axis=-1), np.squeeze(beta_true, axis=-1))
+            # print("corr(x1_hat, beta_true) = ", corr[0, 1])
+            # corrs_x.append(corr[0, 1])
             l2_err = np.linalg.norm(x1_hat - beta_true) / np.linalg.norm(beta_true)
             print("l2 error for x1_hat = ", l2_err)
             l2_errs_x.append(l2_err)
@@ -62,11 +66,13 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         z1_hats.append(z1_hat)
         ############################################################
         # Cosine similarity
-        # Note: this correlation expression could be wrong!
-        # corr = np.dot(z1_hat.transpose(), Xbeta_true) / np.linalg.norm(z1_hat) / np.linalg.norm(Xbeta_true)
-        corr = np.corrcoef(np.squeeze(z1_hat, axis=-1), np.squeeze(Xbeta_true, axis=-1))
-        print("corr(z1_hat, X*beta_true) = ", corr[0, 1])
-        corrs_z.append(corr[0, 1])
+        # Just as above, this is an alignment score, not correlation
+        corr = np.dot(z1_hat.transpose(), Xbeta_true) / np.linalg.norm(z1_hat) / np.linalg.norm(Xbeta_true)
+        print("corr(z1_hat, X*beta_true) = ", corr[0][0])
+        corrs_z.append(corr[0][0])
+        # corr = np.corrcoef(np.squeeze(z1_hat, axis=-1), np.squeeze(Xbeta_true, axis=-1))
+        # print("corr(z1_hat, X*beta_true) = ", corr[0, 1])
+        # corrs_z.append(corr[0, 1])
         l2_err = np.linalg.norm(z1_hat - Xbeta_true) / np.linalg.norm(Xbeta_true)
         print("l2 error for z1_hat = ", l2_err)
         l2_errs_z.append(l2_err)

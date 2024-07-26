@@ -10,7 +10,7 @@
 
 loc=/nfs/scistore13/mondegrp/asharipo/vampW
 
-ml python3
+module load python/3.9
 source ${loc}/venv/bin/activate
 
 

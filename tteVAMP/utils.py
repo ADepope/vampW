@@ -1,10 +1,13 @@
 import matplotlib.pyplot as plt
+import os
+from datetime import datetime
 
 def plot_metrics(corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, dl_dmus, a, p, correct_mu, correct_alpha, n, m, title=None):
     plt.figure(figsize=(20, 10))
     
-    if not title: title = f"Working with {n}x{m} matrix"
-        # Overall title
+    if not title:
+        title = f"Working with {n}x{m} matrix"
+    # Overall title
     plt.suptitle(title, fontsize=16)
 
     # Plotting corr_x
@@ -52,4 +55,15 @@ def plot_metrics(corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, dl_dmus, a
     plt.legend()
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust the layout to make space for the suptitle
+    
+    # Create output directory if it does not exist
+    output_dir = './outputs/figures'
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Generate filename with current date and time
+    current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    filename = f"{output_dir}/plot_{current_time}.png"
+
+    # Save the figure
+    plt.savefig(filename)
     plt.show()

@@ -3,6 +3,31 @@ import numpy as np
 from scipy.stats import norm
 from tteVAMP.denoisers import *
 from tteVAMP.em import *
+import os
+from datetime import datetime
+import pickle
+
+def save_results(output_dir, n, m, **kwargs):
+    print("Saving results!!\n\n\n\n")
+    """
+    Svave results as a pickle file in the specified output directory with the current date and time in the filename.
+
+    Parameters:
+    output_dir (str): Directory where the results should be saved.
+    **kwargs: Results to be saved, passed as keyword arguments.
+    """
+    os.makedirs(output_dir, exist_ok=True)  # Ensure the output directory exists
+
+    # Get current date and time
+    current_time = datetime.now().strftime("%Y%m%d_%H%M")
+
+    # Define the output filename with the date and time
+    output_filename = f'vamp_em_results_{n}x{m}_{current_time}.pkl'
+    output_filepath = os.path.join(output_dir, output_filename)
+
+    # Save the results dictionary as a pickle file
+    with open(output_filepath, 'wb') as f:
+        pickle.dump(kwargs, f)
 
 # prior, y, alpha, mu, maxiter, beta_true
 def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, update_alpha):
@@ -130,5 +155,20 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         print("tau1 = ", tau1)
         print("\n")
 
-
+    save_results('outputs', 
+                 n,
+                 m,
+                 x1_hat=x1_hat, 
+                 gam1=gam1, 
+                 corrs_x=corrs_x, 
+                 l2_errs_x=l2_errs_x, 
+                 corrs_z=corrs_z, 
+                 l2_errs_z=l2_errs_z, 
+                 mus=mus, 
+                 alphas=alphas, 
+                 actual_xis=actual_xis, 
+                 predicted_xis=predicted_xis, 
+                 dl_dmus=dl_dmus, 
+                 z1_hats=z1_hats, 
+                 x1_hats=x1_hats)
     return x1_hat, gam1, corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, actual_xis, predicted_xis, dl_dmus, z1_hats

@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 
-def plot_metrics(corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, dl_dmus, a, p, correct_mu, correct_alpha, n, m):
+def plot_metrics(corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, dl_dmus, a, p, correct_mu, correct_alpha, n, m, title=None):
     plt.figure(figsize=(20, 10))
     
-    # Overall title
-    plt.suptitle(f"Working with {n}x{m} matrix", fontsize=16)
+    if not title: title = f"Working with {n}x{m} matrix"
+        # Overall title
+    plt.suptitle(title, fontsize=16)
 
     # Plotting corr_x
     plt.subplot(3, 4, 1)

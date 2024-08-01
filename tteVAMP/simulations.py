@@ -20,6 +20,7 @@ def sim_geno(n,m,p): # checked!
 # Simulate the coefficients beta
 def sim_beta(m, la, sigma): # checked!
     beta = random.normal(loc=0.0, scale=np.sqrt(sigma), size=[m,1]) # scale = standard deviation
+    print(f"Variance of beta: {np.var(beta)}")
     beta *= random.binomial(1, la, size=[m,1])
     return beta
 

@@ -12,7 +12,7 @@ def update_params(y, mu, z1_hat, alpha, predicted_xi, update_Weibull_alpha, upda
         alpha_new = update_Weibull_alpha(y, mu, z1_hat, alpha, predicted_xi)
         alphas.append(alpha_new)
         alpha = alpha_new
-    if it > 5:
+    if it > -1:
         if update_mu:
             mu_new = update_Weibull_mu(y, z1_hat, alpha, predicted_xi)
             mus.append(mu_new)

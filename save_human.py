@@ -6,7 +6,9 @@ from tteVAMP.simulations import *
 from tteVAMP.vamp import *
 from tteVAMP.utils import plot_metrics
 from bed_reader import open_bed, sample_file
-
+import pandas as pd
+import zarr
+import json
 
 np.random.seed(42)
 p=0.4

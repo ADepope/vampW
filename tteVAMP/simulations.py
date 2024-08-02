@@ -71,10 +71,31 @@ def sim_pheno_LogNormal(X, beta, mu, h2):
     y = np.exp(mu + g + sigma * w)
     return y, sigma
     
+# def sim_model(problem,h2,p, kappa=None):
+#     X = sim_geno(problem.n, problem.m, p)
+#     beta = sim_beta(problem.m, problem.prior_instance.la, problem.prior_instance.sigmas)
+#     mu = np.zeros((problem.n,1))
+#     print(problem.model)
+#     if problem.model == 'Weibull':
+#         y, alpha = sim_pheno_Weibull(X, beta, mu, h2)
+#         return X, beta, y, alpha
+#     elif problem.model == 'Gamma':
+#         return X, beta, sim_pheno_ExpGamma(X, beta, mu, h2, kappa)
+#     elif problem.model == 'LogNormal':
+#         return X, beta, sim_pheno_LogNormal(X, beta, mu, h2)
+#     else:
+#         raise Exception(problem.model, " is not a valid model. Allowed models are: 'Weibull', 'Gamma' and 'LogNormal'")
+
 def sim_model(problem,h2,p, kappa=None):
-    X = sim_geno(problem.n, problem.m, p)
-    beta = sim_beta(problem.m, problem.prior_instance.la, problem.prior_instance.sigmas)
-    mu = np.zeros((problem.n,1))
+    n, m, la = problem.n, problem.m, problem.prior_instance.la
+    mu=np.full((n,1), 0) 
+    X = sim_geno(n,m,p)
+    column_means = np.nanmean(X, axis=0)
+    column_stds = np.nanstd(X, axis=0)
+    print(f"Are standard deviations valid? {not 0 in column_stds}")
+    X = (X - column_means) / column_stds
+    X = np.nan_to_num(X)
+    beta = sim_beta(m, la, h2/m/la)
     print(problem.model)
     if problem.model == 'Weibull':
         y, alpha = sim_pheno_Weibull(X, beta, mu, h2)
@@ -85,4 +106,3 @@ def sim_model(problem,h2,p, kappa=None):
         return X, beta, sim_pheno_LogNormal(X, beta, mu, h2)
     else:
         raise Exception(problem.model, " is not a valid model. Allowed models are: 'Weibull', 'Gamma' and 'LogNormal'")
-    

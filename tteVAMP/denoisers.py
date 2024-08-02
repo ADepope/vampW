@@ -17,6 +17,7 @@ def den_beta(r,gam1,problem): # checked!
     A = (1-prior.la) * norm.pdf(r, loc=0, scale=np.sqrt(1.0/gam1)) # scale = standard deviation
     # Make the variance here match the generated beta
     # h2 / m / la
+    print(f"Denoiser is using sigma: {prior.sigmas[0]}")
     B = prior.la * norm.pdf(r, loc=0, scale=np.sqrt(prior.sigmas[0] + 1.0/gam1))
     ratio = gam1 * r / (gam1 + 1/prior.sigmas[0]) * B / (A + B)
     return ratio

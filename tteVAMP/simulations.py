@@ -87,7 +87,7 @@ def sim_pheno_LogNormal(X, beta, mu, h2):
 #         raise Exception(problem.model, " is not a valid model. Allowed models are: 'Weibull', 'Gamma' and 'LogNormal'")
 
 def sim_model(problem,h2,p, kappa=None):
-    n, m, la = problem.n, problem.m, problem.prior_instance.la
+    n, m, la, sigma = problem.n, problem.m, problem.prior_instance.la, problem.prior_instance.sigmas[0]
     mu=np.full((n,1), 0) 
     X = sim_geno(n,m,p)
     column_means = np.nanmean(X, axis=0)
@@ -95,8 +95,8 @@ def sim_model(problem,h2,p, kappa=None):
     print(f"Are standard deviations valid? {not 0 in column_stds}")
     X = (X - column_means) / column_stds
     X = np.nan_to_num(X)
-    beta = sim_beta(m, la, h2/m/la)
-    sim_beta(m, la, sigma)
+    beta = sim_beta(m, la, sigma)
+    print(f"Simulating data with sigma: {sigma}")
     print(problem.model)
     if problem.model == 'Weibull':
         y, alpha = sim_pheno_Weibull(X, beta, mu, h2)

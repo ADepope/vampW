@@ -8,7 +8,7 @@ def plot_metrics(corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, dl_dmus, a
     if not title:
         title = f"Working with {n}x{m} matrix"
     # Overall title
-    plt.suptitle(title, fontsize=16)
+    plt.suptitle(title, fontsize=26)
 
     # Plotting corr_x
     plt.subplot(3, 4, 1)

@@ -6,7 +6,9 @@ from tteVAMP.simulations import *
 from tteVAMP.vamp import *
 from tteVAMP.utils import plot_metrics
 from bed_reader import open_bed, sample_file
-
+import pandas as pd
+import zarr
+import json
 
 np.random.seed(42)
 p=0.4
@@ -41,20 +43,35 @@ X = np.nan_to_num(X)
  
 beta = sim_beta(m, la, h2/m/la)
 y, alpha = sim_pheno_Weibull(X, beta, mu, h2)
+y = np.log(y)
+indices =  np.arange(0,n)
+df = pd.DataFrame({'IID': indices, 'FID': indices, 'y': y.squeeze(-1)})
 
-maxiter = 20
-problem_instance = Problem(n=n, m=m, la=la, sigmas = [sigma], omegas=[omega], model='Weibull', mu=mu)
 
-print("gam1 = ", gam1)
-print("tau1 = ", tau1)
-print("alpha = ", alpha)
 
-# we start with an initialization that compleately complies with the assumptions
-r1 = np.zeros((m,1))
-p1 = np.zeros((n,1)) 
+directory = 'change to your directory'
+df.to_csv(f"{directory}{n}x{m}_h2_0d9_la_0d05.phen", sep=' ', index=None, header=None)
+vector = np.ones(n)
+np.savetxt(f'{directory}status.fail', vector, fmt='%d')
+zarr.save(f'{directory}X.zarr', X)
 
-problem_instance.prior_instance.distribution_parameters['alpha']=alpha
+# Store variables in a dictionary
+variables = {
+    "n": n,
+    "m": m,
+    "p": p,
+    "la": la,
+    "h2": h2,
+    "data_type": "human genotype; synthetic beta and y",
+    "directory": directory,
+    "sigma": "h2/m/la",
+    "alpha": alpha,
+    "mu": float(mu[0][0]),
+    "Variance of Xb": float(np.var(X@beta)),
+    "Variance of b": float(np.var(beta)),
+    "Scale of y": "log",
+}
 
-# est, gam1, corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, a, ps, dl_dmus, z1_hats, x1_hats =  infere_con_grad(X, y, gam1, r1, tau1, p1, problem_instance, maxiter, beta, False, False)
-est, gam1, corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, a, ps, dl_dmus, z1_hats =  infere(X, y, gam1, r1, tau1, p1, problem_instance, maxiter, beta, False, False)
-plot_metrics(corrs_x, l2_errs_x, corrs_z, l2_errs_z, mus, alphas, dl_dmus, a, ps, mu[0][0], alpha, n, m)
+# Save dictionary as JSON file
+with open(f'{directory}hyperparameters.json', 'w') as json_file:
+    json.dump(variables, json_file, indent=4)

@@ -39,7 +39,7 @@ def save_results(output_dir, n, m, **kwargs):
         pickle.dump(kwargs, f)
 
 # prior, y, alpha, mu, maxiter, beta_true
-def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, update_alpha):
+def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, update_alpha, start_at=5):
 
     alpha = problem.prior_instance.distribution_parameters['alpha']
     mu = problem.prior_instance.distribution_parameters['mu'][0][0]
@@ -146,7 +146,7 @@ def infere(X, y, gam1, r1, tau1, p1, problem, maxiter, beta_true, update_mu, upd
         # LMMSE estimation of z
         z2_hat = np.matmul(X, x2_hat)
 
-        mu, alpha = update_params(y, mu, z1_hat, alpha, predicted_xi, update_Weibull_alpha, update_Weibull_mu, mus, alphas, update_alpha, update_mu, it)
+        mu, alpha = update_params(y, mu, z1_hat, alpha, predicted_xi, update_Weibull_alpha, update_Weibull_mu, mus, alphas, update_alpha, update_mu, it, start_at)
         problem.prior_instance.distribution_parameters['alpha'] = alpha
         problem.prior_instance.distribution_parameters['mu'] = np.full((y.shape[0],1), mu)
 

@@ -96,6 +96,7 @@ def sim_model(problem,h2,p, kappa=None):
     X = (X - column_means) / column_stds
     X = np.nan_to_num(X)
     beta = sim_beta(m, la, h2/m/la)
+    sim_beta(m, la, sigma)
     print(problem.model)
     if problem.model == 'Weibull':
         y, alpha = sim_pheno_Weibull(X, beta, mu, h2)

@@ -1,0 +1,10 @@
+# Ignore the virtual environment directory named 'venv'
+venv
+
+# Ignore the virtual environment directory named '.venv'
+.venv
+
+outputs
+
+*.pkl
+gibbs

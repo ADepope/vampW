@@ -6,7 +6,7 @@ def Abeta1(gam1, beta_true, prior):
     R1 = random.normal(loc=beta_true, scale=1.0/np.sqrt(gam1), size=None) #scale = standard deviation
     return np.mean( der_den_beta(R1, gam1, prior) )
 
-def Az1(tau1, z_true, y, alpha)
+def Az1(tau1, z_true, y, alpha):
     n = z_true.shape[0]
     P1 = random.normal(loc=z_true, scale=1.0/np.sqrt(tau1), size=None) #scale = standard deviation
     return (np.sum( der_den_z(p1, tau1, y, alpha, mu) ) / n)
